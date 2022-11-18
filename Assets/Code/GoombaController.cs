@@ -21,6 +21,10 @@ public class GoombaController : MonoBehaviour
     NavMeshAgent m_NavMeshAgent;
     int m_CurrentPatrolTargetID = 0;
 
+    private void Awake()
+    {
+        m_NavMeshAgent = GetComponent<NavMeshAgent>();
+    }
     private void Start()
     {
         SetPatrolState();
