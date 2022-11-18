@@ -89,4 +89,9 @@ public class MarioPlayerController : MonoBehaviour
         }
         CharacterController.Move(l_Movement);
     }
+
+    public void Die()
+    {
+        Debug.Log("det");
+    }
 }
