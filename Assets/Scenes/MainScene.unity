@@ -626,6 +626,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9500000, guid: 0dc47b9b8a69aca49a111614ec2274be, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: c010ae84e724ea044a2ce2efd702348d, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0dc47b9b8a69aca49a111614ec2274be, type: 3}
 --- !u!1 &555935427 stripped
@@ -672,6 +676,16 @@ MonoBehaviour:
   - {fileID: 1464449702}
   - {fileID: 2124965424}
   m_State: 0
+  m_HearingDistance: 0
+  m_VisualConeAngle: 60
+  m_SightDistance: 8
+  m_SightLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  m_EyesHeight: 1.8
+  m_EyesPlayerHeight: 1.8
+  m_rotationSpeed: 60
+  m_Speed: 10
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -1033,6 +1047,8 @@ MonoBehaviour:
   RunSpeed: 6.5
   Gravity: -1
   JumpSpeed: 1
+  m_CharacterController: {fileID: 0}
+  m_Life: 0
 --- !u!1001 &1217379585
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -15,6 +15,11 @@ public class MarioPlayerController : MonoBehaviour
 
     public float JumpSpeed = 10.0f;
 
+    Vector3 m_StartPosition;
+    Quaternion m_StartRotation;
+    public CharacterController m_CharacterController;
+    public float m_Life;
+
     private void Awake()
     {
         Animator = GetComponent<Animator>();
@@ -93,5 +98,14 @@ public class MarioPlayerController : MonoBehaviour
     public void Die()
     {
         Debug.Log("det");
+    }
+
+    public void RestartGame()
+    {
+        m_Life = 1.0f;
+        m_CharacterController.enabled = false;
+        transform.position = m_StartPosition;
+        transform.rotation = m_StartRotation;
+        m_CharacterController.enabled = true;
     }
 }
