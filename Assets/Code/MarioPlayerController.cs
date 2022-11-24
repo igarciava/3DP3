@@ -5,25 +5,27 @@ using UnityEngine;
 public class MarioPlayerController : MonoBehaviour
 {
     public Animator Animator;
-    public CharacterController CharacterController;
+    public CharacterController CC;
     
     public Camera Camera;
     public float LerpRotationPct = 0.3f;
     public float WalkSpeed = 2.5f;
     public float RunSpeed = 6.5f;
-    public float Gravity = -5.0f;
-
+    
+    [Header("Jump")]
     public float JumpSpeed = 10.0f;
+    public float VerticalSpeed = 0.0f;
+    bool OnGround;
 
     private void Awake()
     {
         Animator = GetComponent<Animator>();
-        CharacterController = GetComponent<CharacterController>();
+        CC = GetComponent<CharacterController>();
     }
     // Start is called before the first frame update
     void Start()
-    {
-        
+    { 
+
     }
 
     // Update is called once per frame
@@ -60,9 +62,9 @@ public class MarioPlayerController : MonoBehaviour
             l_HasMovement = true;
             l_Movement += l_RightCamera;
         }
-        if(Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && OnGround)
         {
-            Gravity = JumpSpeed;
+            VerticalSpeed = JumpSpeed;
         }
         l_Movement.Normalize();
 
@@ -81,12 +83,29 @@ public class MarioPlayerController : MonoBehaviour
             }
         }
         Animator.SetFloat("Speed", l_Speed);
+        VerticalSpeed = VerticalSpeed + Physics.gravity.y * Time.deltaTime;
+        l_Movement.y = VerticalSpeed * Time.deltaTime;
         l_Movement = l_Movement * l_MovementSpeed * Time.deltaTime;
-        l_Movement.y = -1;
+
         if (Input.GetMouseButtonDown(0))
         {
             Animator.SetTrigger("Punch");
         }
-        CharacterController.Move(l_Movement);
+
+        CollisionFlags l_CollisionFlags = CC.Move(l_Movement);
+
+        if ((l_CollisionFlags & CollisionFlags.Above) != 0 && VerticalSpeed > 0.0f)
+        {
+            VerticalSpeed = 0.0f;
+        }
+        if ((l_CollisionFlags & CollisionFlags.Below) != 0)
+        {
+            VerticalSpeed = 0.0f;
+            OnGround = true;
+        }
+        else
+        {
+            OnGround = false;
+        }
     }
 }
