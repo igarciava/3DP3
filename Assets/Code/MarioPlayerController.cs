@@ -1,9 +1,17 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.Animations;
 using UnityEngine;
-public class MarioPlayerController : MonoBehaviour
+public class MarioPlayerController : MonoBehaviour, IRestartGameElement
 {
+    public enum TPunchType
+    {
+        RIGHT_HAND = 0,
+        LEFT_HAND,
+        KICK
+    }
+
     public Animator Animator;
     public CharacterController CC;
     
@@ -15,7 +23,26 @@ public class MarioPlayerController : MonoBehaviour
     [Header("Jump")]
     public float JumpSpeed = 10.0f;
     public float VerticalSpeed = 0.0f;
-    bool OnGround;
+    bool OnGround = true;
+
+    [Header("Punch")]
+    public float ComboPunchTime = 2.5f;
+    float ComboPunchCurrentTime;
+    TPunchType CurrentComboPunch;
+    public Collider LeftHandCollider;
+    public Collider RightHandCollider;
+    public Collider KickCollider;
+    bool IsPunchEnabled = false;
+
+    [Header("Elevator")]
+    public float ElevatorDotAngle = 0.95f;
+    public Collider CurrentElevatorCollider = null;
+
+    [Header("Elevator")]
+    public float BridgeForce = 2.5f;
+
+    Vector3 StartPosition;
+    Quaternion StartRotation;
 
     private void Awake()
     {
@@ -24,10 +51,33 @@ public class MarioPlayerController : MonoBehaviour
     }
     // Start is called before the first frame update
     void Start()
-    { 
-
+    {
+        ComboPunchCurrentTime = -ComboPunchTime;
+        LeftHandCollider.gameObject.SetActive(false);
+        RightHandCollider.gameObject.SetActive(false);
+        KickCollider.gameObject.SetActive(false);
+        StartPosition = transform.position;
+        StartRotation = transform.rotation;
+        GameController.GetGameController().AddRestartGameElements(this);
+        GameController.GetGameController().SetPlayer(this);
     }
 
+    public void SetPunchActive(TPunchType PunchType, bool Active)
+    {
+        if(PunchType == TPunchType.RIGHT_HAND)
+        {
+            RightHandCollider.gameObject.SetActive(Active);
+        }
+        if(PunchType == TPunchType.LEFT_HAND)
+        {
+            LeftHandCollider.gameObject.SetActive(Active);
+        }
+        if(PunchType == TPunchType.KICK)
+        {
+            KickCollider.gameObject.SetActive(Active);
+        }
+
+    }
     // Update is called once per frame
     void Update()
     {
@@ -87,18 +137,18 @@ public class MarioPlayerController : MonoBehaviour
         l_Movement.y = VerticalSpeed * Time.deltaTime;
         l_Movement = l_Movement * l_MovementSpeed * Time.deltaTime;
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && CanPunch())
         {
-            Animator.SetTrigger("Punch");
+            if (MustRestartComboPunch())
+                SetComboPunch(TPunchType.RIGHT_HAND);
+            else
+                NextComboPunch();
         }
 
         CollisionFlags l_CollisionFlags = CC.Move(l_Movement);
 
-        if ((l_CollisionFlags & CollisionFlags.Above) != 0 && VerticalSpeed > 0.0f)
-        {
-            VerticalSpeed = 0.0f;
-        }
-        if ((l_CollisionFlags & CollisionFlags.Below) != 0)
+        
+        if ((l_CollisionFlags & CollisionFlags.Below) != 0 && VerticalSpeed < 0.0f)
         {
             VerticalSpeed = 0.0f;
             OnGround = true;
@@ -109,8 +159,107 @@ public class MarioPlayerController : MonoBehaviour
         }
     }
 
+    private void LateUpdate()
+    {
+        if (CurrentElevatorCollider != null)
+        {
+            Vector3 l_EulerRotation = transform.rotation.eulerAngles;
+            transform.rotation = Quaternion.Euler(0.0f, l_EulerRotation.y, 0.0f);
+        }
+    }
+
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        if(hit.gameObject.tag == "Bridge")
+        {
+            hit.gameObject.GetComponent<Rigidbody>().AddForceAtPosition(-hit.normal * BridgeForce, hit.point);
+        }
+    }
+
+    bool CanPunch()
+    {
+        return !IsPunchEnabled;
+    }
+    public void SetIsPunchEnabled(bool ThePunchActive)
+    {
+        IsPunchEnabled = ThePunchActive;
+    }
+    bool MustRestartComboPunch()
+    {
+        return (Time.time - ComboPunchCurrentTime)> ComboPunchTime;
+    }
+    void NextComboPunch()
+    {
+        if (CurrentComboPunch == TPunchType.RIGHT_HAND)
+            SetComboPunch(TPunchType.LEFT_HAND);
+        else if(CurrentComboPunch == TPunchType.LEFT_HAND)
+            SetComboPunch(TPunchType.KICK);
+        else if(CurrentComboPunch == TPunchType.KICK)
+            SetComboPunch(TPunchType.RIGHT_HAND);
+    }
+    void SetComboPunch(TPunchType PunchType)
+    {
+        CurrentComboPunch = PunchType;
+        ComboPunchCurrentTime = Time.time;
+        IsPunchEnabled = true;
+        if (CurrentComboPunch == TPunchType.RIGHT_HAND)
+            Animator.SetTrigger("PunchRHand");
+        else if (CurrentComboPunch == TPunchType.LEFT_HAND)
+            Animator.SetTrigger("PunchLHand");
+        else if (CurrentComboPunch == TPunchType.KICK)
+            Animator.SetTrigger("PunchKick");
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.tag =="Elevator" && CanAttachToElevator(other))
+        {
+            AttachToElevator(other);
+        }
+    }
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.tag == "Elevator" && other == CurrentElevatorCollider)
+            DetachElevator();
+    }
+    private void OnTriggerStay(Collider other)
+    {
+        if(other.tag == "Elevator")
+        {
+            if (CurrentElevatorCollider == other && Vector3.Dot(other.transform.up, Vector3.up) < ElevatorDotAngle)
+                DetachElevator();
+            if(CanAttachToElevator(other))
+            {
+                AttachToElevator(other);
+            }
+        }
+    }
+
+    bool CanAttachToElevator(Collider other)
+    {
+        return CurrentElevatorCollider == null && Vector3.Dot(other.transform.up, Vector3.up) >= ElevatorDotAngle;
+    }
+    void AttachToElevator(Collider other)
+    {
+        transform.SetParent(other.transform);
+        CurrentElevatorCollider = other;
+    }
+    void DetachElevator()
+    {
+        transform.SetParent(null);
+        CurrentElevatorCollider = null;
+    }
+
     public void Die()
     {
         Debug.Log("det");
+    }
+
+    public void RestartGame()
+    {
+        CC.enabled = false;
+        transform.position = StartPosition;
+        transform.rotation = StartRotation;
+        CC.enabled = true;
     }
 }
