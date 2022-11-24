@@ -108,4 +108,9 @@ public class MarioPlayerController : MonoBehaviour
             OnGround = false;
         }
     }
+
+    public void Die()
+    {
+        Debug.Log("det");
+    }
 }
