@@ -1486,12 +1486,13 @@ MonoBehaviour:
   LerpRotationPct: 0.3
   WalkSpeed: 2.5
   RunSpeed: 6.5
-  JumpSpeed: 50
+  JumpSpeed: 5
   VerticalSpeed: 0
   ComboPunchTime: 2.5
   LeftHandCollider: {fileID: 1343426517}
   RightHandCollider: {fileID: 624288665}
   KickCollider: {fileID: 543476090}
+  ComboJumpTime: 1.8
   ElevatorDotAngle: 0.95
   CurrentElevatorCollider: {fileID: 0}
   BridgeForce: 2.5

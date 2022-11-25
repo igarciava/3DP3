@@ -11,6 +11,12 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         LEFT_HAND,
         KICK
     }
+    public enum TJumpType
+    {
+        NORMAL_JUMP = 0,
+        SECOND_JUMP,
+        THIRD_JUMP
+    }
 
     public Animator Animator;
     public CharacterController CC;
@@ -26,13 +32,19 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     bool OnGround = true;
 
     [Header("Punch")]
-    public float ComboPunchTime = 2.5f;
+    public float ComboPunchTime = 1.0f;
     float ComboPunchCurrentTime;
     TPunchType CurrentComboPunch;
     public Collider LeftHandCollider;
     public Collider RightHandCollider;
     public Collider KickCollider;
     bool IsPunchEnabled = false;
+
+    [Header("Jump")]
+    public float ComboJumpTime = 1.0f;
+    float ComboJumpCurrentTime;
+    TJumpType CurrentComboJump;
+    bool IsJumpEnabled;
 
     [Header("Elevator")]
     public float ElevatorDotAngle = 0.95f;
@@ -53,6 +65,7 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     void Start()
     {
         ComboPunchCurrentTime = -ComboPunchTime;
+        ComboJumpCurrentTime = -ComboJumpTime;
         LeftHandCollider.gameObject.SetActive(false);
         RightHandCollider.gameObject.SetActive(false);
         KickCollider.gameObject.SetActive(false);
@@ -81,7 +94,7 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     // Update is called once per frame
     void Update()
     {
-        float l_Speed = 0.0f;
+        float l_SpeedParameter = 0.0f;
 
         Vector3 l_ForwardCamera = Camera.transform.forward;
         Vector3 l_RightCamera = Camera.transform.right;
@@ -90,8 +103,8 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         l_ForwardCamera.Normalize();
         l_RightCamera.Normalize();
         bool l_HasMovement = false;
-
         Vector3 l_Movement = Vector3.zero;
+
         if (Input.GetKey(KeyCode.W))
         {
             l_HasMovement = true; 
@@ -112,9 +125,15 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
             l_HasMovement = true;
             l_Movement += l_RightCamera;
         }
-        if (Input.GetKeyDown(KeyCode.Space) && OnGround)
+        if (Input.GetKeyDown(KeyCode.Space) && OnGround && CanJump())
         {
-            VerticalSpeed = JumpSpeed;
+            if (MustRestartComboJump())
+            {
+                SetComboJump(TJumpType.NORMAL_JUMP);
+            }
+            else
+                NextComboJump();
+            
         }
         l_Movement.Normalize();
 
@@ -124,29 +143,21 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
             Quaternion l_LookRotation = Quaternion.LookRotation(l_Movement);
             transform.rotation = Quaternion.Lerp(transform.rotation, l_LookRotation, LerpRotationPct);
 
-            l_Speed = 0.5f;
+            l_SpeedParameter = 0.5f;
             l_MovementSpeed = WalkSpeed;
             if (Input.GetKey(KeyCode.LeftShift))
             {
-                l_Speed = 1.0f;
+                l_SpeedParameter = 1.0f;
                 l_MovementSpeed = RunSpeed;
             }
         }
-        Animator.SetFloat("Speed", l_Speed);
-        VerticalSpeed = VerticalSpeed + Physics.gravity.y * Time.deltaTime;
-        l_Movement.y = VerticalSpeed * Time.deltaTime;
-        l_Movement = l_Movement * l_MovementSpeed * Time.deltaTime;
+        Animator.SetFloat("Speed", l_SpeedParameter);
 
-        if (Input.GetMouseButtonDown(0) && CanPunch())
-        {
-            if (MustRestartComboPunch())
-                SetComboPunch(TPunchType.RIGHT_HAND);
-            else
-                NextComboPunch();
-        }
+        VerticalSpeed = VerticalSpeed + Physics.gravity.y * Time.deltaTime;
+        l_Movement = l_Movement * l_MovementSpeed * Time.deltaTime;
+        l_Movement.y = VerticalSpeed * Time.deltaTime;
 
         CollisionFlags l_CollisionFlags = CC.Move(l_Movement);
-
         
         if ((l_CollisionFlags & CollisionFlags.Below) != 0 && VerticalSpeed < 0.0f)
         {
@@ -157,6 +168,16 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         {
             OnGround = false;
         }
+
+        if (Input.GetMouseButtonDown(0) && CanPunch())
+        {
+            if (MustRestartComboPunch())
+                SetComboPunch(TPunchType.RIGHT_HAND);
+            else
+                NextComboPunch();
+        }
+        Debug.Log("OnGround: " + OnGround);
+        Debug.Log("CanJump(): " + CanJump());
     }
 
     private void LateUpdate()
@@ -176,6 +197,7 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         }
     }
 
+    //Punch
     bool CanPunch()
     {
         return !IsPunchEnabled;
@@ -209,7 +231,54 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         else if (CurrentComboPunch == TPunchType.KICK)
             Animator.SetTrigger("PunchKick");
     }
+    //End Punch
 
+    //Jump
+    bool CanJump()
+    {
+        return !IsJumpEnabled;
+    }
+    public void SetIsJumpEnabled(bool TheJumpActive)
+    {
+        IsJumpEnabled = TheJumpActive;
+    }
+    bool MustRestartComboJump()
+    {
+        return (Time.time - ComboJumpCurrentTime) > ComboJumpTime;
+    }
+    void NextComboJump()
+    {
+        if (CurrentComboJump == TJumpType.NORMAL_JUMP)
+            SetComboJump(TJumpType.SECOND_JUMP);
+        else if (CurrentComboJump == TJumpType.SECOND_JUMP)
+            SetComboJump(TJumpType.THIRD_JUMP);
+        else if (CurrentComboJump == TJumpType.THIRD_JUMP)
+            SetComboJump(TJumpType.NORMAL_JUMP);
+    }
+    void SetComboJump(TJumpType JumpType)
+    {
+        CurrentComboJump = JumpType;
+        ComboJumpCurrentTime = Time.time;
+        IsJumpEnabled = true;
+        if (CurrentComboJump == TJumpType.NORMAL_JUMP)
+        {
+            VerticalSpeed = JumpSpeed;
+            Animator.SetTrigger("JumpNormal");
+        }
+        else if (CurrentComboJump == TJumpType.SECOND_JUMP)
+        {
+            VerticalSpeed = JumpSpeed;
+            Animator.SetTrigger("SecondJump");
+        }
+        else if (CurrentComboJump == TJumpType.THIRD_JUMP)
+        {
+            VerticalSpeed = JumpSpeed;
+            Animator.SetTrigger("ThirdJump");
+        }
+    }
+    //End jump
+
+    //Elevator/other things
     private void OnTriggerEnter(Collider other)
     {
         if(other.tag =="Elevator" && CanAttachToElevator(other))
@@ -249,10 +318,11 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         transform.SetParent(null);
         CurrentElevatorCollider = null;
     }
+    //End elevator
 
     public void Die()
     {
-        Debug.Log("det");
+        
     }
 
     public void RestartGame()
