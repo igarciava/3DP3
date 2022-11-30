@@ -176,8 +176,6 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
             else
                 NextComboPunch();
         }
-        Debug.Log("OnGround: " + OnGround);
-        Debug.Log("CanJump(): " + CanJump());
     }
 
     private void LateUpdate()

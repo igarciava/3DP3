@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
 {
@@ -7,9 +8,18 @@ public class GameController : MonoBehaviour
     MarioPlayerController Mario;
     List<IRestartGameElement> RestartGameElements = new List<IRestartGameElement>();
 
+    [Header ("Coins")]
+    public Text CoinText;
+    public int Coins;
+
+
+    [Header ("Health")]
+    public HealthScript HealthScript;
+
     private void Start()
     {
         DontDestroyOnLoad(this.gameObject);
+        Coins = 0;
     }
     public static GameController GetGameController()
     {
@@ -36,6 +46,10 @@ public class GameController : MonoBehaviour
     {
         Mario = TheMario;
     }
+    public MarioPlayerController GetPlayer()
+    {
+        return Mario;
+    }
     public void RestartGame()
     {
         foreach (IRestartGameElement l_restartGameElement in RestartGameElements)
@@ -48,5 +62,30 @@ public class GameController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.R))
             RestartGame();
+
+        //Update Coins
+
+        ShowCoins();
+        MaxCoinsReached();
+
+        //End Update Coins
     }
+
+    //Coins
+
+    void ShowCoins()
+    {
+        CoinText.text = "" + Coins;
+    }
+
+    void MaxCoinsReached()
+    {
+        if (Coins > 100)
+        {
+            Coins = 0;
+            HealthScript.Heal();
+        }
+    }
+
+    //End Coins
 }
