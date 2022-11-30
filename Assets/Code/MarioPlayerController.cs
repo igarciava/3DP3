@@ -265,12 +265,12 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         }
         else if (CurrentComboJump == TJumpType.SECOND_JUMP)
         {
-            VerticalSpeed = JumpSpeed;
+            VerticalSpeed = JumpSpeed + 2;
             Animator.SetTrigger("SecondJump");
         }
         else if (CurrentComboJump == TJumpType.THIRD_JUMP)
         {
-            VerticalSpeed = JumpSpeed;
+            VerticalSpeed = JumpSpeed + 4;
             Animator.SetTrigger("ThirdJump");
         }
     }

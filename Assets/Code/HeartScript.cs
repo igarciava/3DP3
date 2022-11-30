@@ -11,8 +11,11 @@ public class HeartScript : MonoBehaviour
     {
         if (other.tag == "Player")
         {
-            HealthScript.Heal();
-            Destroy(Parent);
+            if (HealthScript.CurrentHealth < 8)
+            {
+                HealthScript.Heal();
+                Destroy(Parent);
+            }
         }
     }
 }
