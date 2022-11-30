@@ -7,10 +7,10 @@ public class HealthScript : MonoBehaviour
 {
     Image Health;
     float MaxHealth = 8.0f;
-    [SerializeField]
-    float CurrentHealth = 8.0f;
+    public float CurrentHealth = 8.0f;
     float MaxHealthCanGet = 8.0f;
     float MinHealthCanGet = 0.0f;
+    HudAnimation HUD;
 
     [Header ("Colors")]
     public Color Blue;
@@ -20,6 +20,7 @@ public class HealthScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        HUD = gameObject.GetComponentInParent<HudAnimation>();
         Health = gameObject.GetComponent<Image>();
         //Alpha Colors
         Blue.a = 1;
@@ -48,11 +49,13 @@ public class HealthScript : MonoBehaviour
     public void SubstractLife()
     {
         CurrentHealth -= 1.0f;
+        HUD.MoveDown();
     }
 
     public void Heal()
     {
         CurrentHealth += 1.0f;
+        HUD.MoveDown();
     }
 
     void Color()
