@@ -1,7 +1,4 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.Animations;
 using UnityEngine;
 public class MarioPlayerController : MonoBehaviour, IRestartGameElement
 {
@@ -20,12 +17,12 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
 
     public Animator Animator;
     public CharacterController CC;
-    
+
     public Camera Camera;
     public float LerpRotationPct = 0.3f;
     public float WalkSpeed = 2.5f;
     public float RunSpeed = 6.5f;
-    
+
     [Header("Jump")]
     public float JumpSpeed = 10.0f;
     public float VerticalSpeed = 0.0f;
@@ -45,13 +42,25 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     float ComboJumpCurrentTime;
     TJumpType CurrentComboJump;
     bool IsJumpEnabled;
+    float JumpTimer;
 
     [Header("Elevator")]
     public float ElevatorDotAngle = 0.95f;
     public Collider CurrentElevatorCollider = null;
 
-    [Header("Elevator")]
+    [Header("Bridge")]
     public float BridgeForce = 2.5f;
+
+    [Header("CheckPoint")]
+    public CheckPoint CurrentCheckPoint = null;
+
+    [Header("Goomba")]
+    public float MaxAngleToKillGoomba = 55.0f;
+    public float KillerJumpSpeed = 1;
+
+    [Header("Health")]
+    bool IsDead = false;
+    public HealthScript Health;
 
     Vector3 StartPosition;
     Quaternion StartRotation;
@@ -77,15 +86,15 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
 
     public void SetPunchActive(TPunchType PunchType, bool Active)
     {
-        if(PunchType == TPunchType.RIGHT_HAND)
+        if (PunchType == TPunchType.RIGHT_HAND)
         {
             RightHandCollider.gameObject.SetActive(Active);
         }
-        if(PunchType == TPunchType.LEFT_HAND)
+        if (PunchType == TPunchType.LEFT_HAND)
         {
             LeftHandCollider.gameObject.SetActive(Active);
         }
-        if(PunchType == TPunchType.KICK)
+        if (PunchType == TPunchType.KICK)
         {
             KickCollider.gameObject.SetActive(Active);
         }
@@ -107,7 +116,7 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
 
         if (Input.GetKey(KeyCode.W))
         {
-            l_HasMovement = true; 
+            l_HasMovement = true;
             l_Movement = l_ForwardCamera;
         }
         if (Input.GetKey(KeyCode.S))
@@ -133,8 +142,9 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
             }
             else
                 NextComboJump();
-            
+
         }
+        
         l_Movement.Normalize();
 
         float l_MovementSpeed = 0.0f;
@@ -157,8 +167,10 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         l_Movement = l_Movement * l_MovementSpeed * Time.deltaTime;
         l_Movement.y = VerticalSpeed * Time.deltaTime;
 
+        Animator.SetFloat("VSpeed", VerticalSpeed);
+
         CollisionFlags l_CollisionFlags = CC.Move(l_Movement);
-        
+
         if ((l_CollisionFlags & CollisionFlags.Below) != 0 && VerticalSpeed < 0.0f)
         {
             VerticalSpeed = 0.0f;
@@ -166,7 +178,17 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         }
         else
         {
-            OnGround = false;
+            TimerOnGround();
+        }
+
+        if (OnGround == false)
+        {
+            if (VerticalSpeed < 0)
+                Animator.SetBool("Falling", true);
+        }
+        else
+        {
+            Animator.SetBool("Falling", false);
         }
 
         if (Input.GetMouseButtonDown(0) && CanPunch())
@@ -175,6 +197,34 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
                 SetComboPunch(TPunchType.RIGHT_HAND);
             else
                 NextComboPunch();
+        }
+        
+        if(Input.GetKeyDown(KeyCode.M))
+        {
+            GetHit();
+        }
+
+        if(Health.CurrentHealth < 1)
+        {
+            IsDead = true;
+        }
+        else
+            IsDead = false;
+
+        if(IsDead)
+        {
+            Die();
+        }
+    }
+
+    void TimerOnGround()
+    {
+        JumpTimer = JumpTimer + Time.deltaTime;
+
+        if (JumpTimer >= 0.2f)
+        {
+            JumpTimer = 0.0f;
+            OnGround = false;
         }
     }
 
@@ -189,10 +239,31 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
 
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        if(hit.gameObject.tag == "Bridge")
+        if (hit.gameObject.tag == "Bridge")
         {
             hit.gameObject.GetComponent<Rigidbody>().AddForceAtPosition(-hit.normal * BridgeForce, hit.point);
         }
+        else if (hit.gameObject.tag == "Goomba")
+        {
+            if (CanKillGoomba(hit.normal))
+            {
+                hit.gameObject.GetComponent<Goomba>().Kill();
+                JumpOverEnemy();
+                Debug.Log("sexo");
+            }
+            else
+                Debug.DrawRay(hit.point, hit.normal * 3.0f, Color.blue, 5.0f);
+        }
+    }
+
+    //Goomba
+    bool CanKillGoomba(Vector3 theNormal)
+    {
+        return Vector3.Dot(theNormal, Vector3.up) >= Mathf.Cos(MaxAngleToKillGoomba * Mathf.Deg2Rad);
+    }
+    void JumpOverEnemy()
+    {
+        VerticalSpeed = KillerJumpSpeed;
     }
 
     //Punch
@@ -206,15 +277,15 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     }
     bool MustRestartComboPunch()
     {
-        return (Time.time - ComboPunchCurrentTime)> ComboPunchTime;
+        return (Time.time - ComboPunchCurrentTime) > ComboPunchTime;
     }
     void NextComboPunch()
     {
         if (CurrentComboPunch == TPunchType.RIGHT_HAND)
             SetComboPunch(TPunchType.LEFT_HAND);
-        else if(CurrentComboPunch == TPunchType.LEFT_HAND)
+        else if (CurrentComboPunch == TPunchType.LEFT_HAND)
             SetComboPunch(TPunchType.KICK);
-        else if(CurrentComboPunch == TPunchType.KICK)
+        else if (CurrentComboPunch == TPunchType.KICK)
             SetComboPunch(TPunchType.RIGHT_HAND);
     }
     void SetComboPunch(TPunchType PunchType)
@@ -273,15 +344,29 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
             VerticalSpeed = JumpSpeed + 4;
             Animator.SetTrigger("ThirdJump");
         }
+        
+        if(OnGround == true)
+        {
+            Animator.SetBool("IsGround", OnGround);
+        }
+        else if (OnGround == false)
+        {
+            Animator.SetBool("IsGround", OnGround);
+        }
     }
     //End jump
 
     //Elevator/other things
     private void OnTriggerEnter(Collider other)
     {
-        if(other.tag =="Elevator" && CanAttachToElevator(other))
+        if (other.tag == "Elevator" && CanAttachToElevator(other))
         {
             AttachToElevator(other);
+        }
+        if(other.tag == "CheckPoint")
+        {
+            CurrentCheckPoint = other.GetComponent<CheckPoint>();
+            other.GetComponentInChildren<ParticleSystem>().Play();
         }
     }
     private void OnTriggerExit(Collider other)
@@ -291,11 +376,11 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     }
     private void OnTriggerStay(Collider other)
     {
-        if(other.tag == "Elevator")
+        if (other.tag == "Elevator")
         {
             if (CurrentElevatorCollider == other && Vector3.Dot(other.transform.up, Vector3.up) < ElevatorDotAngle)
                 DetachElevator();
-            if(CanAttachToElevator(other))
+            if (CanAttachToElevator(other))
             {
                 AttachToElevator(other);
             }
@@ -318,16 +403,39 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     }
     //End elevator
 
+    public void GetHit()
+    {
+        Health.SubstractLife();
+        Animator.SetBool("Hit", true);
+        StartCoroutine(EndHit());
+    }
+
+    IEnumerator EndHit()
+    {
+        yield return new WaitForSeconds(0.1f);
+        Animator.SetBool("Hit", false);
+    }
+
     public void Die()
     {
-        
+        CC.enabled = false;
+        Animator.SetBool("IsDead", IsDead);
     }
 
     public void RestartGame()
     {
+        IsDead = false;
         CC.enabled = false;
-        transform.position = StartPosition;
-        transform.rotation = StartRotation;
+        if (CurrentCheckPoint == null)
+        {
+            transform.position = StartPosition;
+            transform.rotation = StartRotation;
+        }
+        else
+        {
+            transform.position = CurrentCheckPoint.SpawnPosition.position;
+            transform.rotation = CurrentCheckPoint.SpawnPosition.rotation;
+        }
         CC.enabled = true;
     }
 }

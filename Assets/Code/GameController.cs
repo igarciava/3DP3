@@ -8,10 +8,9 @@ public class GameController : MonoBehaviour
     MarioPlayerController Mario;
     List<IRestartGameElement> RestartGameElements = new List<IRestartGameElement>();
 
-    [Header ("Coins")]
+    [Header("Coins")]
     public Text CoinText;
-    public int Coins;
-
+    public int Coins = 0;
 
     [Header ("Health")]
     public HealthScript HealthScript;
@@ -19,7 +18,6 @@ public class GameController : MonoBehaviour
     private void Start()
     {
         DontDestroyOnLoad(this.gameObject);
-        Coins = 0;
     }
     public static GameController GetGameController()
     {
