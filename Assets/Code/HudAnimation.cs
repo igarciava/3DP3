@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using UnityEngine.UI;
 
 public class HudAnimation : MonoBehaviour
 {
@@ -8,6 +8,9 @@ public class HudAnimation : MonoBehaviour
 
     private bool Showing;
     private float SecsWithoutChange;
+
+    [Header("Coins")]
+    public Text CoinText;
 
     private void Start()
     {
@@ -27,6 +30,7 @@ public class HudAnimation : MonoBehaviour
                 HideHUD();
             }
         }
+        ShowCoins();
     }
 
     void MoveUp()
@@ -49,5 +53,9 @@ public class HudAnimation : MonoBehaviour
 
         MoveUp();
         Showing = false;
+    }
+    void ShowCoins()
+    {
+        CoinText.text = "" + GameController.GetGameController().Coins;
     }
 }

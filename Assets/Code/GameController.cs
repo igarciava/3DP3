@@ -8,8 +8,7 @@ public class GameController : MonoBehaviour
     MarioPlayerController Mario;
     List<IRestartGameElement> RestartGameElements = new List<IRestartGameElement>();
 
-    [Header("Coins")]
-    public Text CoinText;
+    
     public int Coins = 0;
 
     [Header ("Health")]
@@ -63,7 +62,6 @@ public class GameController : MonoBehaviour
 
         //Update Coins
 
-        ShowCoins();
         MaxCoinsReached();
 
         //End Update Coins
@@ -71,10 +69,7 @@ public class GameController : MonoBehaviour
 
     //Coins
 
-    void ShowCoins()
-    {
-        CoinText.text = "" + Coins;
-    }
+    
 
     void MaxCoinsReached()
     {

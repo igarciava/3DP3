@@ -27,6 +27,11 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     public float JumpSpeed = 10.0f;
     public float VerticalSpeed = 0.0f;
     bool OnGround = true;
+    public float ComboJumpTime = 1.0f;
+    float ComboJumpCurrentTime;
+    TJumpType CurrentComboJump;
+    bool IsJumpEnabled;
+    float JumpTimer;
 
     [Header("Punch")]
     public float ComboPunchTime = 1.0f;
@@ -36,13 +41,6 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     public Collider RightHandCollider;
     public Collider KickCollider;
     bool IsPunchEnabled = false;
-
-    [Header("Jump")]
-    public float ComboJumpTime = 1.0f;
-    float ComboJumpCurrentTime;
-    TJumpType CurrentComboJump;
-    bool IsJumpEnabled;
-    float JumpTimer;
 
     [Header("Elevator")]
     public float ElevatorDotAngle = 0.95f;
@@ -61,6 +59,9 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     [Header("Health")]
     bool IsDead = false;
     public HealthScript Health;
+
+    [Header("Crouch")]
+    bool IsCrouched = false;
 
     Vector3 StartPosition;
     Quaternion StartRotation;
@@ -136,13 +137,29 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         }
         if (Input.GetKeyDown(KeyCode.Space) && OnGround && CanJump())
         {
-            if (MustRestartComboJump())
+            if (IsCrouched == true)
             {
-                SetComboJump(TJumpType.NORMAL_JUMP);
+                VerticalSpeed = JumpSpeed;
+                Animator.SetTrigger("LongJump");
             }
             else
-                NextComboJump();
-
+            {
+                if (MustRestartComboJump())
+                {
+                    SetComboJump(TJumpType.NORMAL_JUMP);
+                }
+                else
+                    NextComboJump();
+            }
+        }
+        if (Input.GetKey(KeyCode.LeftControl))
+        {
+            IsCrouched = true;
+        }
+        else
+        {
+            IsCrouched = false;
+            Debug.Log("iscrouched" + IsCrouched);
         }
         
         l_Movement.Normalize();
@@ -249,7 +266,6 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
             {
                 hit.gameObject.GetComponent<Goomba>().Kill();
                 JumpOverEnemy();
-                Debug.Log("sexo");
             }
             else
                 Debug.DrawRay(hit.point, hit.normal * 3.0f, Color.blue, 5.0f);
@@ -326,6 +342,7 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     }
     void SetComboJump(TJumpType JumpType)
     {
+        Debug.Log("jump " + JumpType);
         CurrentComboJump = JumpType;
         ComboJumpCurrentTime = Time.time;
         IsJumpEnabled = true;
@@ -353,6 +370,10 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         {
             Animator.SetBool("IsGround", OnGround);
         }
+    }
+    void LongJump()
+    {
+        Animator.SetTrigger("LongJump");
     }
     //End jump
 
