@@ -1,12 +1,19 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
 {
     static GameController m_GameController = null;
-    MarioPlayerController m_Player;
-    float m_PlayerLife;
-    float m_PlayerShield;
-    float m_DroneDamage;
+    MarioPlayerController Mario;
+    List<IRestartGameElement> RestartGameElements = new List<IRestartGameElement>();
+
+    [Header("Coins")]
+    public Text CoinText;
+    public int Coins = 0;
+
+    [Header ("Health")]
+    public HealthScript HealthScript;
 
     private void Start()
     {
@@ -17,9 +24,6 @@ public class GameController : MonoBehaviour
         if(m_GameController == null)
         {
             m_GameController = new GameObject("GameController").AddComponent<GameController>();
-            GameControllerData l_GameControllerData = Resources.Load <GameControllerData>("GameControllerData");
-            m_GameController.m_PlayerLife = l_GameControllerData.m_lifes;
-            Debug.Log("Data loaded with life" + m_GameController.m_PlayerLife);
         }
         return m_GameController;
     }
@@ -32,41 +36,54 @@ public class GameController : MonoBehaviour
         m_GameController = null;
     }
 
-    public void SetPLayerLife(float PlayerLife)
+    public void AddRestartGameElements(IRestartGameElement TheRestartGameElement)
     {
-        m_PlayerLife = PlayerLife;
+        RestartGameElements.Add(TheRestartGameElement);
     }
-    public float GetPlayerLife()
+    public void SetPlayer(MarioPlayerController TheMario)
     {
-        return m_PlayerLife;
-    }
-    public void SetPLayerShield(float PlayerShield)
-    {
-        m_PlayerShield = PlayerShield;
-    }
-    public float GetPlayerShield()
-    {
-        return m_PlayerShield;
-    }
-
-    public void SetDroneDamage(float DroneDamage)
-    {
-        m_DroneDamage = DroneDamage;
-    }
-    public float GetDroneDamage()
-    {
-        return m_DroneDamage;
+        Mario = TheMario;
     }
     public MarioPlayerController GetPlayer()
     {
-        return m_Player;
-    }
-    public void SetPlayer(MarioPlayerController Player)
-    {
-        m_Player = Player;
+        return Mario;
     }
     public void RestartGame()
     {
-        m_Player.RestartGame();
+        foreach (IRestartGameElement l_restartGameElement in RestartGameElements)
+        {
+            l_restartGameElement.RestartGame();
+        }
     }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.R))
+            RestartGame();
+
+        //Update Coins
+
+        ShowCoins();
+        MaxCoinsReached();
+
+        //End Update Coins
+    }
+
+    //Coins
+
+    void ShowCoins()
+    {
+        CoinText.text = "" + Coins;
+    }
+
+    void MaxCoinsReached()
+    {
+        if (Coins > 100)
+        {
+            Coins = 0;
+            HealthScript.Heal();
+        }
+    }
+
+    //End Coins
 }
