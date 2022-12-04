@@ -9,10 +9,8 @@ public class GoombaController : MonoBehaviour
     {
       
         PATROL = 0,
-        ALERT,
-        CHASE,
         ATTACK,
-        HIT,
+        WAIT_TO_ATTACK,
         DIE
     }
 
@@ -40,6 +38,10 @@ public class GoombaController : MonoBehaviour
 
     float m_GoombaSpeed = 0.5f;
 
+    //Attacking
+    public float m_TimeBetweenAttacks = 2.0f;
+    bool m_AlreadyAttacked = false;
+
 
     private void Awake()
     {
@@ -58,20 +60,19 @@ public class GoombaController : MonoBehaviour
             case TState.PATROL:
                 UpdatePatrolState();
                 break;
-            case TState.CHASE:
-                UpdateChaseState();
+            case TState.ATTACK:
+                UpdateAttackState();
                 break;
-           // case TState.DIE:
-             //   UpdateDieState();
-               // break;
+            case TState.WAIT_TO_ATTACK:
+                UpdateWaitToAttackState();
+                break;
+               
         }
 
         
         Animator.SetFloat("GoombaSpeed", m_GoombaSpeed);
 
         Vector3 l_PlayerPosition = GameController.GetGameController().GetPlayer().transform.position;
-        Vector3 l_EyesPosition = transform.position + Vector3.up * m_EyesHeight;
-        Vector3 l_PlayerEyesPosition = l_PlayerPosition + Vector3.up * m_EyesPlayerHeight;
         Vector3 l_DistanceBetween = m_NavMeshAgent.transform.position - l_PlayerPosition;
         m_PlayerPosition = l_PlayerPosition;
         m_DistanceBetween = l_DistanceBetween;
@@ -80,6 +81,7 @@ public class GoombaController : MonoBehaviour
     void SetPatrolState()
     {
         m_State = TState.PATROL;
+        m_NavMeshAgent.isStopped = false;
         m_NavMeshAgent.destination = m_PatrolTargets[m_CurrentPatrolTargetID].position;
     }
     void UpdatePatrolState()
@@ -88,8 +90,8 @@ public class GoombaController : MonoBehaviour
             MoveToNextTargetPosition();
         if (SeesPlayer())
         {
-            Animator.SetBool("Sees", true);
-            SetChaseState();
+            
+            SetAttackState();
         }
             
     }
@@ -126,15 +128,46 @@ public class GoombaController : MonoBehaviour
             !Physics.Raycast(l_Ray, l_Lenght, m_SightLayerMask.value);
     }
 
-    void SetChaseState()
+    void SetAttackState()
     {
-        m_State = TState.CHASE;
+        m_State = TState.ATTACK;
         m_NavMeshAgent.transform.LookAt(m_PlayerPosition);
+        Animator.SetBool("Sees", true);
     }
-    void UpdateChaseState()
+    void UpdateAttackState()
     {      
         m_NavMeshAgent.isStopped = false;
         m_NavMeshAgent.destination = m_PlayerPosition;
         m_Speed = 1.0f;
+
+    }
+
+    void SetWaitToAttackState()
+    {
+        m_State = TState.WAIT_TO_ATTACK;
+        Animator.SetBool("Sees", true);
+    }
+    void UpdateWaitToAttackState()
+    {
+        m_NavMeshAgent.isStopped = true;
+        ResetGoombaAttack();
+        if (SeesPlayer())
+            SetAttackState();
+        else
+            SetPatrolState();
+
+    }
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Player")
+        {
+            SetWaitToAttackState();
+        }
+    }
+
+    IEnumerator ResetGoombaAttack()
+    {
+        yield return new WaitForSeconds(m_TimeBetweenAttacks);
+        
     }
 }
