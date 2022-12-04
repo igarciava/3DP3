@@ -110,7 +110,7 @@ public class GoombaController : MonoBehaviour
 
     bool SeesPlayer()
     {
-        Vector3 l_PlayerPosition = GameController.GetGameController().GetPlayer().transform.position;
+        Vector3 l_PlayerPosition = GameController.GetGameController().GetPlayer().gameObject.transform.position;
         Vector3 l_DirectionPlayerXZ = l_PlayerPosition - transform.position;
         l_DirectionPlayerXZ.Normalize();
         Vector3 l_ForwardXZ = transform.forward;
