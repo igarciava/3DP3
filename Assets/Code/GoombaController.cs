@@ -174,7 +174,7 @@ public class GoombaController : MonoBehaviour
     void UpdateChaseState()
     {      
         m_NavMeshAgent.isStopped = false;
-        if()
+        
     }
 
     public Vector3 GetGoombaDirection()
