@@ -124,7 +124,7 @@ public class GoombaController : MonoBehaviour
             MoveToNextTargetPosition();
         if (SeesPlayer())
         {
-            Debug.Log("HAHAH");
+            //Debug.Log("HAHAH");
             Animator.SetBool("Sees", true);
             SetChaseState();
         }

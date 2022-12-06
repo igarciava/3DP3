@@ -1717,6 +1717,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9500000, guid: 0dc47b9b8a69aca49a111614ec2274be, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: c010ae84e724ea044a2ce2efd702348d, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0dc47b9b8a69aca49a111614ec2274be, type: 3}
 --- !u!1001 &753255721
@@ -2179,6 +2183,7 @@ MonoBehaviour:
   MaxAngleToKillGoomba: 55
   KillerJumpSpeed: 1
   Health: {fileID: 1017640892}
+  RayOrigin: {fileID: 1452878335}
 --- !u!114 &1032854412
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2547,6 +2552,10 @@ PrefabInstance:
       value: MarioMapa
       objectReference: {fileID: 0}
     - target: {fileID: 100000, guid: acc36eee311f0dd428f5959c5f4b3d97, type: 3}
+      propertyPath: m_TagString
+      value: World
+      objectReference: {fileID: 0}
+    - target: {fileID: 100000, guid: acc36eee311f0dd428f5959c5f4b3d97, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 8
       objectReference: {fileID: 0}
@@ -2613,6 +2622,36 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5192449028422202264, guid: 5cfb5bdb9fb397e48b0a60ca1d34f3d0, type: 3}
   m_PrefabInstance: {fileID: 1508675202}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1452878334
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1452878335}
+  m_Layer: 3
+  m_Name: RayOrigin
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1452878335
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1452878334}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.004, y: 1.012, z: 0.342}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1032854409}
+  m_RootOrder: 10
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1508675202
 PrefabInstance:
   m_ObjectHideFlags: 0

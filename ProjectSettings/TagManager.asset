@@ -8,6 +8,7 @@ TagManager:
   - Bridge
   - CheckPoint
   - Goomba
+  - World
   layers:
   - Default
   - TransparentFX

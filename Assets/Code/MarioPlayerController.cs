@@ -63,6 +63,9 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     [Header("Crouch")]
     bool IsCrouched = false;
 
+    [Header("WallJump")]
+    public Transform RayOrigin;
+
     Vector3 StartPosition;
     Quaternion StartRotation;
 
@@ -159,7 +162,7 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         else
         {
             IsCrouched = false;
-            Debug.Log("iscrouched" + IsCrouched);
+            //Debug.Log("iscrouched" + IsCrouched);
         }
         
         l_Movement.Normalize();
@@ -200,13 +203,15 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
 
         if (OnGround == false)
         {
-            if (VerticalSpeed < 0)
+            if (VerticalSpeed < -0.3)
                 Animator.SetBool("Falling", true);
         }
         else
         {
             Animator.SetBool("Falling", false);
         }
+
+        WallJump();
 
         if (Input.GetMouseButtonDown(0) && CanPunch())
         {
@@ -342,7 +347,7 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     }
     void SetComboJump(TJumpType JumpType)
     {
-        Debug.Log("jump " + JumpType);
+        //Debug.Log("jump " + JumpType);
         CurrentComboJump = JumpType;
         ComboJumpCurrentTime = Time.time;
         IsJumpEnabled = true;
@@ -362,20 +367,33 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
             Animator.SetTrigger("ThirdJump");
         }
         
-        if(OnGround == true)
-        {
-            Animator.SetBool("IsGround", OnGround);
-        }
-        else if (OnGround == false)
-        {
-            Animator.SetBool("IsGround", OnGround);
-        }
-    }
-    void LongJump()
-    {
-        Animator.SetTrigger("LongJump");
+        //if(OnGround == true)
+        //{
+        //    Animator.SetBool("IsGround", OnGround);
+        //}
+        //else if (OnGround == false)
+        //{
+        //    Animator.SetBool("IsGround", OnGround);
+        //}
     }
     //End jump
+
+    //Wall Jump
+    void WallJump()
+    {
+        Ray l_Ray = new Ray(RayOrigin.position, transform.forward);
+        RaycastHit l_RaycastHit;
+
+        Debug.DrawRay(l_Ray.origin, l_Ray.direction, Color.red);
+
+        if (Physics.Raycast(l_Ray, out l_RaycastHit, 0.2f))
+        {
+            if (l_RaycastHit.collider.tag == "World" && OnGround == false)
+            {
+                Debug.Log("Wallyump");
+            }
+        }
+    }
 
     //Elevator/other things
     private void OnTriggerEnter(Collider other)
