@@ -65,6 +65,7 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
 
     [Header("WallJump")]
     public Transform RayOrigin;
+    bool IsRotating = false;
 
     Vector3 StartPosition;
     Quaternion StartRotation;
@@ -118,26 +119,46 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         bool l_HasMovement = false;
         Vector3 l_Movement = Vector3.zero;
 
-        if (Input.GetKey(KeyCode.W))
+        if (!WallJump())
         {
-            l_HasMovement = true;
-            l_Movement = l_ForwardCamera;
+            if (Input.GetKey(KeyCode.W))
+            {
+                l_HasMovement = true;
+                l_Movement = l_ForwardCamera;
+            }
+            if (Input.GetKey(KeyCode.S))
+            {
+                l_HasMovement = true;
+                l_Movement = -l_ForwardCamera;
+            }
+            if (Input.GetKey(KeyCode.A))
+            {
+                l_HasMovement = true;
+                l_Movement -= l_RightCamera;
+            }
+            if (Input.GetKey(KeyCode.D))
+            {
+                l_HasMovement = true;
+                l_Movement += l_RightCamera;
+            }
         }
-        if (Input.GetKey(KeyCode.S))
+        else
         {
-            l_HasMovement = true;
-            l_Movement = -l_ForwardCamera;
+            if (!IsRotating)
+            {
+                IsRotating = true;
+                transform.Rotate(new Vector3(0.0f, 180.0f), Space.Self);
+            }
+            StartCoroutine(SetRotatingFalse());
         }
-        if (Input.GetKey(KeyCode.A))
+
+        IEnumerator SetRotatingFalse()
         {
-            l_HasMovement = true;
-            l_Movement -= l_RightCamera;
+            yield return new WaitForSeconds(1.5f);
+            IsRotating = false;
         }
-        if (Input.GetKey(KeyCode.D))
-        {
-            l_HasMovement = true;
-            l_Movement += l_RightCamera;
-        }
+
+
         if (Input.GetKeyDown(KeyCode.Space) && OnGround && CanJump())
         {
             if (IsCrouched == true)
@@ -164,7 +185,7 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
             IsCrouched = false;
             //Debug.Log("iscrouched" + IsCrouched);
         }
-        
+
         l_Movement.Normalize();
 
         float l_MovementSpeed = 0.0f;
@@ -220,20 +241,20 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
             else
                 NextComboPunch();
         }
-        
-        if(Input.GetKeyDown(KeyCode.M))
+
+        if (Input.GetKeyDown(KeyCode.M))
         {
             GetHit();
         }
 
-        if(Health.CurrentHealth < 1)
+        if (Health.CurrentHealth < 1)
         {
             IsDead = true;
         }
         else
             IsDead = false;
 
-        if(IsDead)
+        if (IsDead)
         {
             Die();
         }
@@ -366,7 +387,7 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
             VerticalSpeed = JumpSpeed + 4;
             Animator.SetTrigger("ThirdJump");
         }
-        
+
         //if(OnGround == true)
         //{
         //    Animator.SetBool("IsGround", OnGround);
@@ -379,7 +400,7 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     //End jump
 
     //Wall Jump
-    void WallJump()
+    private bool WallJump()
     {
         Ray l_Ray = new Ray(RayOrigin.position, transform.forward);
         RaycastHit l_RaycastHit;
@@ -391,8 +412,11 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
             if (l_RaycastHit.collider.tag == "World" && OnGround == false)
             {
                 Debug.Log("Wallyump");
+                return true;
             }
         }
+
+        return false;
     }
 
     //Elevator/other things
@@ -402,7 +426,7 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         {
             AttachToElevator(other);
         }
-        if(other.tag == "CheckPoint")
+        if (other.tag == "CheckPoint")
         {
             CurrentCheckPoint = other.GetComponent<CheckPoint>();
             other.GetComponentInChildren<ParticleSystem>().Play();
