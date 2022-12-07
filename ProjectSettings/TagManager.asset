@@ -8,6 +8,7 @@ TagManager:
   - Bridge
   - CheckPoint
   - Goomba
+  - Punch
   layers:
   - Default
   - TransparentFX

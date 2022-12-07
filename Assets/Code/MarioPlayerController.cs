@@ -23,6 +23,8 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
     public float WalkSpeed = 2.5f;
     public float RunSpeed = 6.5f;
 
+    HudAnimation Hud;
+
     [Header("Jump")]
     public float JumpSpeed = 10.0f;
     public float VerticalSpeed = 0.0f;
@@ -367,6 +369,10 @@ public class MarioPlayerController : MonoBehaviour, IRestartGameElement
         {
             CurrentCheckPoint = other.GetComponent<CheckPoint>();
             other.GetComponentInChildren<ParticleSystem>().Play();
+        }
+        if(other.tag == "Goomba")
+        {
+            GetHit();
         }
     }
     private void OnTriggerExit(Collider other)

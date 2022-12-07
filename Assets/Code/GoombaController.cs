@@ -76,34 +76,7 @@ public class GoombaController : MonoBehaviour
 
         }
 
-        //float l_MovementSpeed = 0.0f;
-        //Vector3 l_Movement = Vector3.zero;
-
-        //VerticalSpeed = VerticalSpeed + Physics.gravity.y * Time.deltaTime;
-        //l_Movement = l_Movement * l_MovementSpeed * Time.deltaTime;
-        //l_Movement.y = VerticalSpeed * Time.deltaTime;
-
-        //if (OnGround == false)
-        //{
-        //    CollisionFlags l_CollisionFlags = m_CharacterController.Move(l_Movement);
-
-        //    if ((l_CollisionFlags & CollisionFlags.Below) != 0 && VerticalSpeed < 0.0f)
-        //    {
-        //        VerticalSpeed = 0.0f;
-        //        OnGround = true;
-        //    }
-        //    else
-        //    {
-        //        TimerOnGround();
-        //    }
-        //}
         
-
-        //if (OnGround == false)
-        //{
-        //    if (VerticalSpeed < 0)
-        //        Animator.SetBool("Falling", true);
-        //}
 
         Animator.SetFloat("GoombaSpeed", m_GoombaSpeed);
 
@@ -174,7 +147,10 @@ public class GoombaController : MonoBehaviour
     void UpdateChaseState()
     {      
         m_NavMeshAgent.isStopped = false;
-        if()
+        if (m_PlayerPosition == transform.position)
+        {
+            Animator.SetBool("Sees", false);
+        }
     }
 
     public Vector3 GetGoombaDirection()
@@ -187,14 +163,11 @@ public class GoombaController : MonoBehaviour
         return l_Direction;
     }
 
-    void TimerOnGround()
+    private void OnTriggerEnter(Collider other)
     {
-        JumpTimer = JumpTimer + Time.deltaTime;
-
-        if (JumpTimer >= 0.2f)
+        if (other.tag == "Punch")
         {
-            JumpTimer = 0.0f;
-            OnGround = false;
+            GameController.Destroy(this);
         }
     }
 }
